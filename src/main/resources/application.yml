@@ -1,1 +1,43 @@
+spring:
+  profiles:
+    active: dev
+  application:
+    name: wage-manage
+  main:
+    allow-bean-definition-overriding: true
 
+---
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgres:@wage_manage:5432
+    username: wage
+    password: Wage@171
+  jpa:
+    hibernate:
+      ddl-auto: update
+  config:
+    activate:
+      on-profile: prod
+
+---
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test
+    username: sa
+    password:
+  jpa:
+    show-sql: true
+    generate-ddl: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        connection:
+          pool_size: 3
+        format_sql: false
+  config:
+    activate:
+      on-profile: dev

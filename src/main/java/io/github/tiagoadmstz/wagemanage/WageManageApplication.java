@@ -8,7 +8,5 @@ public class WageManageApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(WageManageApplication.class, args);
-		String.
 	}
-
 }
