@@ -1,9 +1,7 @@
 package io.github.tiagoadmstz.wagemanage.services;
 
 import io.github.tiagoadmstz.wagemanage.entities.*;
-import io.github.tiagoadmstz.wagemanage.repositories.ContactDetailsRepository;
-import io.github.tiagoadmstz.wagemanage.repositories.PersonRepository;
-import io.github.tiagoadmstz.wagemanage.repositories.RoleRepository;
+import io.github.tiagoadmstz.wagemanage.repositories.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFRow;
@@ -27,73 +25,86 @@ class XlsImportServiceImpl implements IXlsImportService {
     private final PersonRepository personRepository;
     private final RoleRepository roleRepository;
     private final ContactDetailsRepository contactDetailsRepository;
+    private final CityRepository cityRepository;
+    private final CountryRepository countryRepository;
+    private final UndressRepository undressRepository;
+    private final WageUserRepository wageUserRepository;
 
-    public XlsImportServiceImpl(PersonRepository personRepository, RoleRepository roleRepository, ContactDetailsRepository contactDetailsRepository) {
+    public XlsImportServiceImpl(PersonRepository personRepository, RoleRepository roleRepository, ContactDetailsRepository contactDetailsRepository, CityRepository cityRepository, CountryRepository countryRepository, UndressRepository undressRepository, WageUserRepository wageUserRepository) {
         this.personRepository = personRepository;
         this.roleRepository = roleRepository;
         this.contactDetailsRepository = contactDetailsRepository;
+        this.cityRepository = cityRepository;
+        this.countryRepository = countryRepository;
+        this.undressRepository = undressRepository;
+        this.wageUserRepository = wageUserRepository;
     }
 
     @Override
     public boolean importXls(final String fileName) {
         getXlsFile(fileName).ifPresent(workbook -> {
-            List<Sheet> sheets = getSheets(workbook);
-            List<Role> roleList = mountRoleList(sheets.get(1));
-            Sheet personSheet = sheets.get(0);
-            List<XlsRow> personRows = getRows(personSheet);
-            List<ContactDetails> contactDetailsList = mountContactDetailsList(personRows);
+            final List<Sheet> sheets = getSheets(workbook);
+            final List<Role> roleList = saveRoleList(sheets.get(1));
+            final Sheet personSheet = sheets.get(0);
+            final List<XlsRow> personRows = getRows(personSheet);
             personRows.subList(1, personRows.size()).forEach(row -> {
-                Person person = new Person();
-                person.setId(Double.valueOf(row.columns.get(0).toString()).longValue());
-                person.setName(row.columns.get(1).toString());
-                person.setBirthdate(LocalDate.parse(row.columns.get(9).toString(), DateTimeFormatter.ofPattern("M/d/yyyy")));
-
-                //person.setContactDetails(contactDetails);
-
-                /*City city = new City();
-                city.setName(row.columns.get(2).toString());*/
-
-                /*Country country = new Country();
-                country.setNome(row.columns.get(6).toString());
-                city.setCountry(country);*/
-
-                /*Undress undress = new Undress();
-                undress.setCity(city);
-                undress.setZipCode(row.columns.get(4).toString());
-                undress.setStreetName(row.columns.get(5).toString());
-                person.setUndress(undress);*/
-
-                /*WageUser wageUser = new WageUser();
-                wageUser.setUsername(row.columns.get(7).toString());
-                person.setUser(wageUser);*/
-
-                try {
-                    long roleId = Double.valueOf(row.columns.get(10).toString()).longValue();
-                    roleList.stream().filter(role -> role.getId().equals(roleId)).forEach(person::setRole);
-                    personRepository.save(person);
-                } catch (NullPointerException nullPointerException) {
-                    logger.error("Person has no role");
-                }
+                final long personId = Double.valueOf(row.columns.get(0).toString()).longValue();
+                final String personName = row.columns.get(1).toString();
+                final String cityName = row.columns.get(2).toString();
+                final String email = row.columns.get(3).toString();
+                final String zipCode = row.columns.get(4).toString();
+                final String streetName = row.columns.get(5).toString();
+                final String countryName = row.columns.get(6).toString();
+                final String username = row.columns.get(7).toString();
+                final String phoneNumber = row.columns.get(8).toString();
+                final String birthdate = row.columns.get(9).toString();
+                final Object roleId = row.columns.get(10);
+                savePerson(personId, personName, cityName, email, zipCode, streetName, countryName, username, phoneNumber, birthdate, roleId, roleList);
             });
         });
         personRepository.findAll().forEach(System.out::println);
         return true;
     }
 
-    private List<ContactDetails> mountContactDetailsList(final List<XlsRow> personRows) {
-        final List<ContactDetails> contactDetailsList = new ArrayList<>();
-        personRows.subList(1, personRows.size()).stream()
-                .map(row -> {
-                    ContactDetails contactDetails = new ContactDetails();
-                    contactDetails.setEmail(row.columns.get(3).toString());
-                    contactDetails.setPhoneNumber(row.columns.get(8).toString());
-                    contactDetailsRepository.save(contactDetails);
-                    return contactDetails;
-                }).forEach(contactDetailsList::add);
-        return contactDetailsList;
+    private void savePerson(
+            final Long personId, final String personName, final String cityName,
+            final String email, final String zipCode, final String streetName,
+            final String countryName, final String username, final String phoneNumber,
+            final String birthdate, final Object roleId, final List<Role> roleList
+    ) {
+        Person person = new Person();
+        person.setId(personId);
+        person.setName(personName);
+        person.setBirthdate(LocalDate.parse(birthdate, DateTimeFormatter.ofPattern("M/d/yyyy")));
+
+        final ContactDetails contactDetails = contactDetailsRepository.findByEmailAndPhoneNumber(email, phoneNumber)
+                .orElseGet(() -> contactDetailsRepository.save(new ContactDetails(email, phoneNumber)));
+        person.setContactDetails(contactDetails);
+
+        final Country country = countryRepository.findByName(countryName)
+                .orElseGet(() -> countryRepository.save(new Country(countryName)));
+
+        final City city = cityRepository.findByName(cityName)
+                .orElseGet(() -> cityRepository.save(new City(cityName, country)));
+
+        final Undress undress = undressRepository.findByStreetNameAndZipCode(streetName, zipCode)
+                .orElseGet(() -> undressRepository.save(new Undress(streetName, zipCode, city)));
+        person.setUndress(undress);
+
+        final WageUser wageUser = wageUserRepository.findByUsername(username)
+                .orElseGet(() -> wageUserRepository.save(new WageUser(username)));
+        person.setUser(wageUser);
+
+        try {
+            long roleIdLong = Double.valueOf(roleId.toString()).longValue();
+            roleList.stream().filter(role -> role.getId().equals(roleIdLong)).forEach(person::setRole);
+        } catch (NullPointerException nullPointerException) {
+            logger.error("Person has no role");
+        }
+        personRepository.save(person);
     }
 
-    private List<Role> mountRoleList(Sheet roles) {
+    private List<Role> saveRoleList(Sheet roles) {
         List<Role> roleList = new ArrayList<>();
         List<XlsRow> roleRows = getRows(roles);
         roleRows.subList(1, roleRows.size()).forEach(row -> {
@@ -114,7 +125,7 @@ class XlsImportServiceImpl implements IXlsImportService {
             final Workbook workbook = loadWorkbook(input);
             input.close();
             if (dataFile.isFile() && dataFile.exists()) {
-                return Optional.of(workbook);
+                return Optional.ofNullable(workbook);
             }
         } catch (IOException ioException) {
             logger.error("Error on try load XLS file, caus: {}", ioException.getMessage());

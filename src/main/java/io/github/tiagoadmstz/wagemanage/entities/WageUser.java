@@ -1,11 +1,13 @@
 package io.github.tiagoadmstz.wagemanage.entities;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table(name = "wage_users")
 public class WageUser implements Serializable {
@@ -17,4 +19,7 @@ public class WageUser implements Serializable {
     private String username;
     private String password;
 
+    public WageUser(String username) {
+        this.username = username;
+    }
 }

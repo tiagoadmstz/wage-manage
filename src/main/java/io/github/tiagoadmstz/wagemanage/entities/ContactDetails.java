@@ -1,11 +1,13 @@
 package io.github.tiagoadmstz.wagemanage.entities;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table(name = "contact_details")
 public class ContactDetails implements Serializable {
@@ -17,4 +19,8 @@ public class ContactDetails implements Serializable {
     private String email;
     private String phoneNumber;
 
+    public ContactDetails(String email, String phoneNumber) {
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+    }
 }

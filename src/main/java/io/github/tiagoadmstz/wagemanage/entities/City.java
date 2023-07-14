@@ -2,11 +2,13 @@ package io.github.tiagoadmstz.wagemanage.entities;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
+@NoArgsConstructor
 @Entity
 @Table(name = "cities")
 public class City implements Serializable {
@@ -17,7 +19,11 @@ public class City implements Serializable {
     private Long id;
     @Column(unique = true)
     private String name;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     private Country country;
 
+    public City(String name, Country country) {
+        this.name = name;
+        this.country = country;
+    }
 }

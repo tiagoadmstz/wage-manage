@@ -17,12 +17,12 @@ public class Person implements Serializable {
     private Long id;
     private String name;
     private LocalDate birthdate;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private Undress undress;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     private ContactDetails contactDetails;
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne
     private Role role;
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne
     private WageUser user;
 }
