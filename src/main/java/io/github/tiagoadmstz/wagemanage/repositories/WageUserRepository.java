@@ -1,14 +1,26 @@
 package io.github.tiagoadmstz.wagemanage.repositories;
 
 import io.github.tiagoadmstz.wagemanage.entities.WageUser;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import jakarta.inject.Named;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface WageUserRepository extends JpaRepository<WageUser, Long> {
+@Named
+public class WageUserRepository implements JpaRepository<WageUser, Long> {
 
-    Optional<WageUser> findByUsername(String username);
+    public Optional<WageUser> findByUsername(final String username) {
+        return Optional.empty();
+    }
 
+    @Override
+    public List<WageUser> findAll() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public WageUser save(WageUser save) {
+        return save;
+    }
 }

@@ -1,14 +1,12 @@
 package io.github.tiagoadmstz.wagemanage.services;
 
+import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class XlsImportServiceImplTest {
 
-    @Autowired
+    @Inject
     private IXlsImportService xlsImportService;
 
     @Test

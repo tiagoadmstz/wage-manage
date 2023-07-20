@@ -1,9 +1,20 @@
 package io.github.tiagoadmstz.wagemanage.repositories;
 
 import io.github.tiagoadmstz.wagemanage.entities.Person;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import jakarta.inject.Named;
 
-@Repository
-public interface PersonRepository extends JpaRepository<Person, Long> {
+import java.util.ArrayList;
+import java.util.List;
+
+@Named
+public class PersonRepository implements JpaRepository<Person, Long> {
+    @Override
+    public List<Person> findAll() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public Person save(Person save) {
+        return save;
+    }
 }

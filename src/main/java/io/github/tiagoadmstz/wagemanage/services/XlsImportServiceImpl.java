@@ -2,23 +2,24 @@ package io.github.tiagoadmstz.wagemanage.services;
 
 import io.github.tiagoadmstz.wagemanage.entities.*;
 import io.github.tiagoadmstz.wagemanage.repositories.*;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.ss.usermodel.*;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.IntStream;
 
-@Service
+@Named
 class XlsImportServiceImpl implements IXlsImportService {
 
     private final Logger logger = LogManager.getLogger(XlsImportServiceImpl.class);
@@ -30,7 +31,8 @@ class XlsImportServiceImpl implements IXlsImportService {
     private final UndressRepository undressRepository;
     private final WageUserRepository wageUserRepository;
 
-    public XlsImportServiceImpl(PersonRepository personRepository, RoleRepository roleRepository, ContactDetailsRepository contactDetailsRepository, CityRepository cityRepository, CountryRepository countryRepository, UndressRepository undressRepository, WageUserRepository wageUserRepository) {
+    @Inject
+    private XlsImportServiceImpl(PersonRepository personRepository, RoleRepository roleRepository, ContactDetailsRepository contactDetailsRepository, CityRepository cityRepository, CountryRepository countryRepository, UndressRepository undressRepository, WageUserRepository wageUserRepository) {
         this.personRepository = personRepository;
         this.roleRepository = roleRepository;
         this.contactDetailsRepository = contactDetailsRepository;
@@ -120,14 +122,15 @@ class XlsImportServiceImpl implements IXlsImportService {
 
     private Optional<Workbook> getXlsFile(final String fileName) {
         try {
-            final File dataFile = new ClassPathResource(fileName).getFile();
+            //TODO: test getting classpath file
+            final File dataFile = new File(getClass().getResource(fileName).toURI());
             final FileInputStream input = new FileInputStream(dataFile);
             final Workbook workbook = loadWorkbook(input);
             input.close();
             if (dataFile.isFile() && dataFile.exists()) {
                 return Optional.ofNullable(workbook);
             }
-        } catch (IOException ioException) {
+        } catch (URISyntaxException | IOException ioException) {
             logger.error("Error on try load XLS file, caus: {}", ioException.getMessage());
         }
         return Optional.empty();
